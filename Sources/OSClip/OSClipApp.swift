@@ -24,6 +24,7 @@ struct OSClipApp: App {
         Window("OSClip", id: "main") {
             HistoryView(store: store, watcher: watcher)
         }
+        .defaultSize(width: 640, height: 480)
         Window("OSClip Settings", id: "settings") {
             SettingsView(store: store)
         }
