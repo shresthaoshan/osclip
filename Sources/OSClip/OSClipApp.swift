@@ -4,6 +4,7 @@ import SwiftUI
 struct OSClipApp: App {
     @State private var store: HistoryStore
     private let watcher: ClipboardWatcher
+    private let picker: QuickPicker
 
     init() {
         let limit = UserDefaults.standard.object(forKey: "limit") as? Int ?? HistoryStore.defaultLimit
@@ -11,6 +12,9 @@ struct OSClipApp: App {
         _store = State(initialValue: store)
         watcher = ClipboardWatcher(store: store)
         watcher.start()
+        let picker = QuickPicker(store: store, watcher: watcher)
+        self.picker = picker
+        HotKey.register { picker.toggle() }
     }
 
     var body: some Scene {
@@ -40,6 +44,7 @@ struct MenuContent: View {
             }
         }
         Divider()
+        if !HotKey.isRegistered { Text("⌃⌘V is in use by another app") }
         Button("Open…") { open("main") }.keyboardShortcut("o")
         Button("Settings…") { open("settings") }.keyboardShortcut(",")
         Button("Quit") { NSApp.terminate(nil) }.keyboardShortcut("q")
