@@ -97,9 +97,8 @@ struct HistoryView: View {
         case kVK_Delete where flags.contains(.command) && query.isEmpty:
             if items.indices.contains(selection) { store.remove(items[selection]) }
         default:
-            // Modified arrows, and ←/→ while there is search text, edit the search field.
-            let horizontal = keyCode == kVK_LeftArrow || keyCode == kVK_RightArrow
-            guard flags.subtracting([.numericPad, .function]).isEmpty, !(horizontal && !query.isEmpty),
+            // Arrows with ⌥, ⌘ or ⇧ edit the search text; plain arrows move the selection.
+            guard flags.subtracting([.numericPad, .function]).isEmpty,
                   let next = Selection.move(selection, keyCode: keyCode, count: items.count, columns: columns) else { return false }
             selection = next
         }
