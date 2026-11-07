@@ -17,6 +17,9 @@ struct OSClipApp: App {
         MenuBarExtra("OSClip", systemImage: "doc.on.clipboard") {
             MenuContent(store: store, watcher: watcher)
         }
+        Window("OSClip", id: "main") {
+            HistoryView(store: store, watcher: watcher)
+        }
     }
 }
 
