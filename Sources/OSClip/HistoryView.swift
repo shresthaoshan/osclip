@@ -5,6 +5,7 @@ struct HistoryView: View {
     let watcher: ClipboardWatcher
     @State private var query = ""
     @AppStorage("grid") private var grid = false
+    @State private var confirmDeleteAll = false
 
     var body: some View {
         let items = store.search(query)
@@ -33,6 +34,14 @@ struct HistoryView: View {
                 Image(systemName: "square.grid.2x2").tag(true)
             }
             .pickerStyle(.segmented)
+            Button("Delete All", systemImage: "trash", role: .destructive) { confirmDeleteAll = true }
+                .foregroundStyle(.red)
+                .disabled(store.items.isEmpty)
+        }
+        .confirmationDialog("Delete all history?", isPresented: $confirmDeleteAll) {
+            Button("Delete All", role: .destructive) { store.clear() }
+        } message: {
+            Text("This cannot be undone.")
         }
         .frame(minWidth: 420, minHeight: 360)
     }
