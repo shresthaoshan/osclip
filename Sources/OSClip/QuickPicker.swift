@@ -115,6 +115,7 @@ private struct QuickPickerView: View {
             Divider()
             if items.isEmpty {
                 ContentUnavailableView(picker.query.isEmpty ? "No History" : "No Results", systemImage: "doc.on.clipboard")
+                    .frame(maxHeight: .infinity)
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {

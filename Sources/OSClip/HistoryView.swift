@@ -54,10 +54,11 @@ struct HistoryView: View {
             searching = true
             monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 let code = event.keyCode, flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask).rawValue
+                let target = event.window.map(ObjectIdentifier.init)
                 return MainActor.assumeIsolated {
                     // Keys for other windows (Settings, the ⌃⌘V picker) and input method composition pass through.
-                    guard NSApp.keyWindow === window,
-                          (window?.firstResponder as? NSTextInputClient)?.hasMarkedText() != true else { return false }
+                    guard let window, target == ObjectIdentifier(window),
+                          (window.firstResponder as? NSTextInputClient)?.hasMarkedText() != true else { return false }
                     return handle(keyCode: code, flags: NSEvent.ModifierFlags(rawValue: flags))
                 } ? nil : event
             }
@@ -85,7 +86,7 @@ struct HistoryView: View {
         .frame(minWidth: 420, minHeight: 360)
     }
 
-    /// Enter copies, ⌘⌫ deletes, Esc clears the search and then closes, arrows move.
+    /// Enter copies, ⌘⌫ with an empty search deletes, Esc clears the search and then closes, arrows move.
     private func handle(keyCode: UInt16, flags: NSEvent.ModifierFlags) -> Bool {
         let items = store.search(query)
         switch Int(keyCode) {
@@ -93,7 +94,7 @@ struct HistoryView: View {
             if items.indices.contains(selection) { pick(items[selection]) }
         case kVK_Escape:
             if query.isEmpty { dismissWindow(id: "main") } else { query = "" }
-        case kVK_Delete where flags.contains(.command):
+        case kVK_Delete where flags.contains(.command) && query.isEmpty:
             if items.indices.contains(selection) { store.remove(items[selection]) }
         default:
             // Modified arrows, and ←/→ while there is search text, edit the search field.
@@ -154,15 +155,20 @@ struct HistoryView: View {
     }
 }
 
-/// Reports the NSWindow that hosts the view.
+/// Reports the NSWindow that hosts the view, each time the view moves to a window.
 private struct WindowReader: NSViewRepresentable {
     let onWindow: (NSWindow?) -> Void
 
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async { onWindow(view.window) }
-        return view
-    }
-
+    func makeNSView(context: Context) -> NSView { WindowView(onWindow: onWindow) }
     func updateNSView(_ nsView: NSView, context: Context) {}
+
+    final class WindowView: NSView {
+        let onWindow: (NSWindow?) -> Void
+        init(onWindow: @escaping (NSWindow?) -> Void) {
+            self.onWindow = onWindow
+            super.init(frame: .zero)
+        }
+        required init?(coder: NSCoder) { nil }
+        override func viewDidMoveToWindow() { onWindow(window) }
+    }
 }
