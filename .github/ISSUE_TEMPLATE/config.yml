@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Known limitations
+    url: https://github.com/shresthaoshan/osclip#known-limitations
+    about: Check whether your problem is a known limitation before you report it.
+  - name: Contributing guide
+    url: https://github.com/shresthaoshan/osclip/blob/main/CONTRIBUTING.md
+    about: Setup, architecture, and how to send a change.

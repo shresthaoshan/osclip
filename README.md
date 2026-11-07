@@ -6,6 +6,13 @@ A minimal clipboard history app for macOS. It lives in the menu bar and keeps th
 - No permissions. OSClip does not need Accessibility access.
 - History stays on your Mac and remains after a restart.
 
+## Why OSClip
+
+macOS keeps only one item on the clipboard. When you copy something new, the old item is gone.
+Most clipboard managers fix this, but they add many features, need Accessibility permission, or cost money.
+
+OSClip does one job: it keeps what you copy and gives it back fast. It has no dependencies, needs no permissions, and does not send your data anywhere.
+
 ## Features
 
 - **Menu bar menu.** Shows the last 15 items. Select an item to put it on the clipboard.
@@ -20,7 +27,21 @@ A minimal clipboard history app for macOS. It lives in the menu bar and keeps th
 - macOS 14 (Sonoma) or later
 - Xcode 16 or later, to build
 
-## Build and run
+## Install
+
+OSClip has no prebuilt release yet. Build it from source:
+
+```bash
+git clone https://github.com/shresthaoshan/osclip.git
+cd osclip
+make app
+mv OSClip.app /Applications/
+open /Applications/OSClip.app
+```
+
+The clipboard icon appears in the menu bar. OSClip has no Dock icon.
+
+## Build from source
 
 ```bash
 make run
@@ -34,7 +55,26 @@ make run
 | `make test`  | Runs the tests (`swift test`).       |
 | `make clean` | Removes `.build` and `OSClip.app`.   |
 
-To install, move `OSClip.app` to `/Applications`. "Launch at login" works best from there.
+### Signing
+
+`make app` signs the app ad hoc (`codesign --sign -`). This is enough to run OSClip on your own Mac.
+
+An ad hoc signature changes with each build. macOS uses the signature to identify the app, so after a rebuild you may need to turn **Launch at login** off and on again.
+For a stable signature, sign with an Apple Development certificate. It is free with an Apple ID: in Xcode, open Settings › Accounts and add a certificate. Then change the `codesign` line in the `Makefile`:
+
+```make
+codesign --force --sign "Apple Development" $(APP)
+```
+
+### Permissions
+
+OSClip needs no permissions:
+
+- The ⌃⌘V hotkey uses `RegisterEventHotKey`, which does not need Accessibility access.
+- Reading and writing the clipboard needs no permission on macOS 14 and 15.
+- The quick picker gets keys in its own panel.
+
+**Launch at login** can need your approval in System Settings › General › Login Items. Settings shows a button for it.
 
 ## Usage
 
@@ -109,6 +149,40 @@ To remove all data, quit OSClip and delete the folder.
 - Auto-paste after you select an item (needs Accessibility permission)
 - Configurable hotkey
 
+## Troubleshooting
+
+**⌃⌘V does nothing.**
+Open the menu. If it says "⌃⌘V is in use by another app", another app holds the shortcut. Quit that app or change its shortcut, then quit and open OSClip.
+
+**An item is not in the history.**
+- OSClip skips items that the source app marks as concealed or transient. Password managers do this.
+- OSClip checks the clipboard every 0.5 seconds. If two copies happen within 0.5 seconds, it saves only the second one.
+- OSClip saves only what it sees while it runs.
+
+**Search does not find a text item.**
+Search reads the first 2000 characters of each item. A match after that point is not found.
+
+**Paste gives the wrong format.**
+OSClip keeps plain text, RTF, PNG images and file references. It gives images back as PNG and TIFF. Other formats, such as HTML or app-specific data, are not kept.
+
+**Launch at login does not work.**
+Move `OSClip.app` to `/Applications`, then turn the setting off and on. If Settings shows **Open Login Items**, approve OSClip there. After a rebuild with ad hoc signing, turn the setting off and on again (see [Signing](#signing)).
+
+## Uninstall
+
+1. In Settings, turn off **Launch at login**.
+2. Quit OSClip (menu bar icon › **Quit**).
+3. Delete `OSClip.app`.
+4. Delete the history and the settings:
+
+```bash
+rm -rf ~/Library/Application\ Support/osclip
+```
+
+```bash
+defaults delete com.shresthaoshan.osclip
+```
+
 ## Project structure
 
 ```
@@ -124,6 +198,10 @@ Tests/OSClipTests/       Swift Testing tests
 Info.plist               App bundle settings (menu bar only, no Dock icon)
 Makefile                 Build, run and test commands
 ```
+
+## Contributing
+
+Bug reports, ideas and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, how the code works, and how to send a change. [DESIGN.md](DESIGN.md) has the UI and keyboard rules.
 
 ## License
 

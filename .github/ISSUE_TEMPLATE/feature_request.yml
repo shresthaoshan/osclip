@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a new feature, shortcut, or setting.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What do you want?
+      description: The feature, the shortcut, or the setting.
+      placeholder: "Pin an item so that it stays at the top of the history."
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: The problem it solves, or how you would use it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other ways to get the same result, including macOS features.

@@ -1,0 +1,85 @@
+name: Bug report
+description: Something in OSClip does not work as expected.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Please read the [known limitations](https://github.com/shresthaoshan/osclip#known-limitations) first.
+        Do not paste secrets or private clipboard content into this issue.
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "15.6"
+    validations:
+      required: true
+
+  - type: input
+    id: mac
+    attributes:
+      label: Mac model
+      placeholder: "MacBook Air M2, 2022"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: OSClip version or commit
+      placeholder: "0.1.0 or 259c509"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does the problem happen?
+      options:
+        - Menu bar menu
+        - Quick picker (⌃⌘V)
+        - History window
+        - Settings
+        - Clipboard capture or paste
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source app
+      description: For capture or paste problems, the app that you copied from or pasted into.
+      placeholder: "Safari, Numbers, Finder"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Copy a cell range in Numbers.
+        2. Press ⌃⌘V and type "total".
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Other information
+      description: Screenshots or logs. Remove private content first.
