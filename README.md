@@ -201,8 +201,8 @@ Makefile                 Build, run and test commands
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, how the code works, and how to send a change. [DESIGN.md](DESIGN.md) has the UI and keyboard rules.
+Bug reports, ideas and pull requests are welcome. Read [CONTRIBUTING.md](https://github.com/shresthaoshan/osclip/blob/main/CONTRIBUTING.md) for the setup, how the code works, and how to send a change. [DESIGN.md](https://github.com/shresthaoshan/osclip/blob/main/DESIGN.md) has the UI and keyboard rules.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+OSClip is released under the [MIT License](https://github.com/shresthaoshan/osclip/blob/main/LICENSE).

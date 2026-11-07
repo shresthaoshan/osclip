@@ -1,0 +1,41 @@
+# GitHub Pages site: https://osclip.shresthaoshan.com/ (custom domain, set in the repo's Pages settings)
+remote_theme: mmistakes/minimal-mistakes@4.28.1
+minimal_mistakes_skin: default  # also: air, aqua, contrast, dark, dirt, mint, neon, plum, sunrise, catppuccin_latte, catppuccin_mocha
+
+title: OSClip
+description: A minimal clipboard history for the macOS menu bar.
+url: https://osclip.shresthaoshan.com
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-include-cache
+  - jekyll-sitemap  # makes /sitemap.xml and /robots.txt for search engines
+
+# README.md is the home page. The README links to CONTRIBUTING.md, DESIGN.md and LICENSE on GitHub,
+# because GitHub Pages does not render files with those names without front matter.
+exclude:
+  - CONTRIBUTING.md
+  - DESIGN.md
+  - LICENSE
+  - Package.swift
+  - Sources
+  - Tests
+  - Makefile
+  - Info.plist
+  - "*.app"
+
+# The page title comes from each file's first heading, so remove that heading from the text.
+titles_from_headings:
+  strip_title: true
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: single
+      author_profile: false
+      toc: true          # table of contents from the page's headings
+      toc_sticky: true
+# OSClip has no blog posts, so hide the RSS "Feed" link in the footer.
+atom_feed:
+  hide: true
