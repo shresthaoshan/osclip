@@ -37,6 +37,14 @@ final class ClipboardWatcher {
         for item in items {
             var entry: [String: Data] = [:]
             for type in Self.kept { entry[type.rawValue] = item.data(forType: type) }
+            // Keep PNG only: TIFF is uncompressed and can be tens of MB. A TIFF can hold 1x and 2x images; keep the largest.
+            // ponytail: converts on the main thread (~0.25 s for a 24 MP TIFF-only copy); move off-main if it shows.
+            if let tiff = entry[NSPasteboard.PasteboardType.tiff.rawValue] {
+                entry[NSPasteboard.PasteboardType.png.rawValue] = entry[NSPasteboard.PasteboardType.png.rawValue]
+                    ?? (NSBitmapImageRep.imageReps(with: tiff).max { $0.pixelsWide < $1.pixelsWide } as? NSBitmapImageRep)?
+                        .representation(using: .png, properties: [:])
+                if entry[NSPasteboard.PasteboardType.png.rawValue] != nil { entry[NSPasteboard.PasteboardType.tiff.rawValue] = nil }
+            }
             if !entry.isEmpty { payload.append(entry) }
         }
         // A change during the reads may leave a partial payload; the next poll captures the new content.
@@ -48,12 +56,13 @@ final class ClipboardWatcher {
             .map { String(decoding: $0, as: UTF8.self) }
         let hasImage = payload.contains { ($0[NSPasteboard.PasteboardType.png.rawValue] ?? $0[NSPasteboard.PasteboardType.tiff.rawValue]) != nil }
 
+        // Text before image: spreadsheets and editors add a picture of the copied text.
         if !paths.isEmpty {
             store.add(payload, kind: .file, text: paths.joined(separator: "\n"))
-        } else if hasImage {
-            store.add(payload, kind: .image, text: "")
         } else if !strings.isEmpty {
             store.add(payload, kind: .text, text: strings.joined(separator: "\n"))
+        } else if hasImage {
+            store.add(payload, kind: .image, text: "")
         }
     }
 
@@ -64,6 +73,11 @@ final class ClipboardWatcher {
         pasteboard.writeObjects(payload.map { entry in
             let pbItem = NSPasteboardItem()
             for (type, data) in entry { pbItem.setData(data, forType: .init(type)) }
+            // Some apps read only TIFF, and capture keeps PNG only.
+            if let png = entry[NSPasteboard.PasteboardType.png.rawValue], entry[NSPasteboard.PasteboardType.tiff.rawValue] == nil,
+               let tiff = NSBitmapImageRep(data: png)?.tiffRepresentation {
+                pbItem.setData(tiff, forType: .tiff)
+            }
             return pbItem
         })
         lastChange = pasteboard.changeCount

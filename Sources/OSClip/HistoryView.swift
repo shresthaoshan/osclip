@@ -34,7 +34,7 @@ struct HistoryView: View {
                 Image(systemName: "square.grid.2x2").tag(true)
             }
             .pickerStyle(.segmented)
-            Button("Delete All", systemImage: "trash", role: .destructive) { confirmDeleteAll = true }
+            Button("Delete All…", systemImage: "trash", role: .destructive) { confirmDeleteAll = true }
                 .foregroundStyle(.red)
                 .disabled(store.items.isEmpty)
         }

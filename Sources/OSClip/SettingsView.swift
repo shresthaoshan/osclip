@@ -30,7 +30,7 @@ struct SettingsView: View {
             if let loginError {
                 Text(loginError).font(.caption).foregroundStyle(.red)
             }
-            Button("Clear History…", role: .destructive) { confirmClear = true }
+            Button("Delete All…", role: .destructive) { confirmClear = true }
         }
         .formStyle(.grouped)
         .frame(width: 360)
@@ -41,8 +41,8 @@ struct SettingsView: View {
             let clamped = min(max(limit, Self.limits.lowerBound), Self.limits.upperBound)
             if clamped != limit { limit = clamped } else { store.limit = limit }
         }
-        .confirmationDialog("Clear all history?", isPresented: $confirmClear) {
-            Button("Clear", role: .destructive) { store.clear() }
+        .confirmationDialog("Delete all history?", isPresented: $confirmClear) {
+            Button("Delete All", role: .destructive) { store.clear() }
         } message: {
             Text("This cannot be undone.")
         }

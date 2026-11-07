@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import Testing
 @testable import OSClip
 
@@ -50,6 +50,30 @@ struct HistoryStoreTests {
         #expect(store.items.map(\.text) == ["a"])
         #expect(files().filter { $0.hasSuffix(".plist") }.count == 1)
         #expect(HistoryStore(dir: dir, limit: 10).items.map(\.text) == ["a"])
+    }
+
+    @Test func longTextIsCutInIndexButKeptInPayload() throws {
+        let store = HistoryStore(dir: dir, limit: 10)
+        let long = String(repeating: "x", count: 5000)
+        store.add(text(long), kind: .text, text: long)
+        #expect(store.items[0].text.count == HistoryStore.textLimit)
+        #expect(store.payload(for: store.items[0]) == text(long))
+        let file = try Data(contentsOf: dir.appendingPathComponent("\(store.items[0].id.uuidString).plist"))
+        #expect(file.starts(with: Data("bplist".utf8)))
+    }
+
+    @Test func imageGetsSmallThumbnail() {
+        let store = HistoryStore(dir: dir, limit: 10)
+        let big = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 2000, pixelsHigh: 1000, bitsPerSample: 8, samplesPerPixel: 4,
+                                   hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        let png = big.representation(using: .png, properties: [:])!
+        store.add([["public.png": png]], kind: .image, text: "")
+        let item = store.items[0]
+        let thumbnail = NSImage(contentsOf: dir.appendingPathComponent("\(item.id.uuidString).png"))
+        #expect(thumbnail?.size.width == CGFloat(HistoryStore.thumbnailPixels))
+        #expect(store.image(for: item, maxSide: 32)?.size == NSSize(width: 32, height: 16))
+        store.remove(item)
+        #expect(files() == ["index.json"])
     }
 
     @Test func clearRemovesEverything() {
