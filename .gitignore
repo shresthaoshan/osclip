@@ -1,0 +1,4 @@
+.build/
+.swiftpm/
+OSClip.app/
+.DS_Store
