@@ -6,7 +6,7 @@ struct SettingsView: View {
 
     let store: HistoryStore
     @AppStorage("limit") private var limit = HistoryStore.defaultLimit
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var loginStatus = SMAppService.mainApp.status
     @State private var loginError: String?
     @State private var confirmClear = false
 
@@ -20,7 +20,13 @@ struct SettingsView: View {
                     Stepper("History size", value: $limit, in: Self.limits, step: 10).labelsHidden()
                 }
             }
-            Toggle("Launch at login", isOn: Binding(get: { launchAtLogin }, set: { setLaunchAtLogin($0) }))
+            Toggle("Launch at login", isOn: Binding(get: { loginStatus == .enabled }, set: { setLaunchAtLogin($0) }))
+            if loginStatus == .requiresApproval {
+                LabeledContent("Needs approval in System Settings") {
+                    Button("Open Login Items") { SMAppService.openSystemSettingsLoginItems() }
+                }
+                .font(.caption)
+            }
             if let loginError {
                 Text(loginError).font(.caption).foregroundStyle(.red)
             }
@@ -28,6 +34,9 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 360)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            loginStatus = SMAppService.mainApp.status
+        }
         .onChange(of: limit) {
             let clamped = min(max(limit, Self.limits.lowerBound), Self.limits.upperBound)
             if clamped != limit { limit = clamped } else { store.limit = limit }
@@ -46,6 +55,6 @@ struct SettingsView: View {
         } catch {
             loginError = error.localizedDescription
         }
-        launchAtLogin = SMAppService.mainApp.status == .enabled
+        loginStatus = SMAppService.mainApp.status
     }
 }

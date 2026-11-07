@@ -50,3 +50,24 @@ struct HistoryStoreTests {
         #expect(files() == ["index.json"])
     }
 }
+
+@MainActor
+struct HistoryStoreRegressionTests {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+
+    @Test func hashKeepsItemBoundaries() {
+        let key = "public.utf8-plain-text"
+        let two: Payload = [[key: Data("A".utf8)], [key: Data("B".utf8)]]
+        let one: Payload = [[key: Data("A\(key)B".utf8)]]
+        #expect(HistoryStore.hash(two) != HistoryStore.hash(one))
+    }
+
+    @Test func corruptIndexIsKeptAsBackup() throws {
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try Data("not json".utf8).write(to: dir.appendingPathComponent("index.json"))
+        let store = HistoryStore(dir: dir, limit: 10)
+        #expect(store.items.isEmpty)
+        let names = try FileManager.default.contentsOfDirectory(atPath: dir.path)
+        #expect(names.contains { $0.hasPrefix("index-corrupt-") })
+    }
+}

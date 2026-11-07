@@ -27,8 +27,9 @@ final class ClipboardWatcher {
     }
 
     func poll() {
-        guard pasteboard.changeCount != lastChange else { return }
-        lastChange = pasteboard.changeCount
+        let change = pasteboard.changeCount
+        guard change != lastChange else { return }
+        lastChange = change
         guard let items = pasteboard.pasteboardItems,
               !items.contains(where: { !Self.skipped.isDisjoint(with: $0.types.map(\.rawValue)) }) else { return }
 
@@ -38,7 +39,8 @@ final class ClipboardWatcher {
             for type in Self.kept { entry[type.rawValue] = item.data(forType: type) }
             if !entry.isEmpty { payload.append(entry) }
         }
-        guard !payload.isEmpty else { return }
+        // A change during the reads may leave a partial payload; the next poll captures the new content.
+        guard !payload.isEmpty, pasteboard.changeCount == change else { return }
 
         let paths = payload.compactMap { $0[NSPasteboard.PasteboardType.fileURL.rawValue] }
             .compactMap { URL(dataRepresentation: $0, relativeTo: nil)?.path }

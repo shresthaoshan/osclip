@@ -22,7 +22,7 @@ final class HistoryStore {
     static let defaultLimit = 200
 
     private(set) var items: [ClipItem] = []
-    var limit: Int { didSet { trim(); save() } }
+    var limit: Int { didSet { commit(removing: trim()) } }
 
     private let dir: URL
     // ponytail: full-size decoded images stay in memory; store real thumbnails if memory grows.
@@ -32,8 +32,12 @@ final class HistoryStore {
         self.dir = dir
         self.limit = limit
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        if let data = try? Data(contentsOf: indexURL) {
-            items = (try? JSONDecoder().decode([ClipItem].self, from: data)) ?? []
+        guard let data = try? Data(contentsOf: indexURL) else { return }
+        do {
+            items = try JSONDecoder().decode([ClipItem].self, from: data)
+        } catch {
+            // Keep the unreadable index for recovery instead of overwriting it on the next save.
+            try? FileManager.default.moveItem(at: indexURL, to: dir.appendingPathComponent("index-corrupt-\(Int(Date().timeIntervalSince1970)).json"))
         }
     }
 
@@ -47,8 +51,7 @@ final class HistoryStore {
         guard let data = try? PropertyListEncoder().encode(payload),
               (try? data.write(to: payloadURL(item.id), options: .atomic)) != nil else { return }
         items.insert(item, at: 0)
-        trim()
-        save()
+        commit(removing: trim())
     }
 
     func payload(for item: ClipItem) -> Payload? {
@@ -87,35 +90,45 @@ final class HistoryStore {
     }
 
     func clear() {
-        items.forEach(deleteFiles)
+        let removed = items
         items = []
-        save()
+        commit(removing: removed)
     }
 
-    private func trim() {
-        guard items.count > limit else { return }
-        items[limit...].forEach(deleteFiles)
-        items.removeSubrange(limit...)
+    /// Drops items over the limit and returns them.
+    private func trim() -> [ClipItem] {
+        guard items.count > limit else { return [] }
+        defer { items.removeSubrange(limit...) }
+        return Array(items[limit...])
     }
 
-    private func deleteFiles(_ item: ClipItem) {
-        try? FileManager.default.removeItem(at: payloadURL(item.id))
-        images[item.id] = nil
+    /// Saves the index, then deletes the payloads of removed items. A failed save keeps the files.
+    private func commit(removing removed: [ClipItem] = []) {
+        guard save() else { return }
+        for item in removed {
+            try? FileManager.default.removeItem(at: payloadURL(item.id))
+            images[item.id] = nil
+        }
     }
 
-    private func save() {
-        try? JSONEncoder().encode(items).write(to: indexURL, options: .atomic)
+    @discardableResult
+    private func save() -> Bool {
+        (try? JSONEncoder().encode(items).write(to: indexURL, options: .atomic)) != nil
     }
 
     private var indexURL: URL { dir.appendingPathComponent("index.json") }
     private func payloadURL(_ id: UUID) -> URL { dir.appendingPathComponent("\(id.uuidString).plist") }
 
     static func hash(_ payload: Payload) -> String {
+        // Length prefixes keep item and entry boundaries, so different payloads never share an input.
         var hasher = SHA256()
+        func length(_ n: Int) { withUnsafeBytes(of: UInt64(n).littleEndian) { hasher.update(bufferPointer: $0) } }
+        length(payload.count)
         for item in payload {
-            for key in item.keys.sorted() {
-                hasher.update(data: Data(key.utf8))
-                hasher.update(data: item[key]!)
+            length(item.count)
+            for (key, data) in item.sorted(by: { $0.key < $1.key }) {
+                length(key.utf8.count); hasher.update(data: Data(key.utf8))
+                length(data.count); hasher.update(data: data)
             }
         }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
