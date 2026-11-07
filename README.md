@@ -2,6 +2,8 @@
 
 A minimal clipboard history app for macOS. It lives in the menu bar and keeps the text, images and files that you copy.
 
+**Website:** [osclip.shresthaoshan.com](https://osclip.shresthaoshan.com/)
+
 - No dependencies. Swift and SwiftUI only.
 - No permissions. OSClip does not need Accessibility access.
 - History stays on your Mac and remains after a restart.
