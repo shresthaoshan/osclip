@@ -20,6 +20,10 @@ struct OSClipApp: App {
         Window("OSClip", id: "main") {
             HistoryView(store: store, watcher: watcher)
         }
+        Window("OSClip Settings", id: "settings") {
+            SettingsView(store: store)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
