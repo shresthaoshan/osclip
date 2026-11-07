@@ -89,6 +89,11 @@ final class HistoryStore {
         return query.isEmpty ? items : items.filter { $0.text.localizedCaseInsensitiveContains(query) }
     }
 
+    func remove(_ item: ClipItem) {
+        items.removeAll { $0.id == item.id }
+        commit(removing: [item])
+    }
+
     func clear() {
         let removed = items
         items = []

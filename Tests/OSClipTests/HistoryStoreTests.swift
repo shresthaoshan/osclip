@@ -42,6 +42,16 @@ struct HistoryStoreTests {
         #expect(store.search(" ").count == 2)
     }
 
+    @Test func removeDeletesOneItemAndItsFile() {
+        let store = HistoryStore(dir: dir, limit: 10)
+        store.add(text("a"), kind: .text, text: "a")
+        store.add(text("b"), kind: .text, text: "b")
+        store.remove(store.items[0])
+        #expect(store.items.map(\.text) == ["a"])
+        #expect(files().filter { $0.hasSuffix(".plist") }.count == 1)
+        #expect(HistoryStore(dir: dir, limit: 10).items.map(\.text) == ["a"])
+    }
+
     @Test func clearRemovesEverything() {
         let store = HistoryStore(dir: dir, limit: 10)
         store.add(text("a"), kind: .text, text: "a")

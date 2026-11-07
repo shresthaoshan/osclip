@@ -46,6 +46,9 @@ struct HistoryView: View {
             label().contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            Button("Delete", role: .destructive) { store.remove(item) }
+        }
     }
 
     private func row(_ item: ClipItem) -> some View {
