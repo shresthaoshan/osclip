@@ -25,13 +25,13 @@ final class QuickPicker: NSObject, NSWindowDelegate {
     /// Returns true when the key is handled. Other keys go to the search field.
     func handle(keyCode: UInt16) -> Bool {
         switch Int(keyCode) {
-        case kVK_DownArrow: selection = min(selection + 1, max(items.count - 1, 0))
-        case kVK_UpArrow: selection = max(selection - 1, 0)
         case kVK_Return, kVK_ANSI_KeypadEnter:
             if items.indices.contains(selection) { watcher.copy(items[selection]) }
             close()
         case kVK_Escape: close()
-        default: return false
+        default:
+            guard let next = Selection.move(selection, keyCode: keyCode, count: items.count) else { return false }
+            selection = next
         }
         return true
     }
@@ -75,6 +75,22 @@ final class QuickPicker: NSObject, NSWindowDelegate {
     /// A click outside the list closes it.
     func windowDidResignKey(_ notification: Notification) {
         close()
+    }
+}
+
+/// Arrow-key movement shared by the picker and the history window.
+enum Selection {
+    /// The index after an arrow key, or nil when the key does not move. ←/→ move only in a grid (`columns` > 1).
+    static func move(_ index: Int, keyCode: UInt16, count: Int, columns: Int = 1) -> Int? {
+        let step: Int
+        switch Int(keyCode) {
+        case kVK_DownArrow: step = columns
+        case kVK_UpArrow: step = -columns
+        case kVK_RightArrow where columns > 1: step = 1
+        case kVK_LeftArrow where columns > 1: step = -1
+        default: return nil
+        }
+        return min(max(index + step, 0), max(count - 1, 0))
     }
 }
 
