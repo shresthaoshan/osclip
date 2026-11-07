@@ -124,3 +124,7 @@ Tests/OSClipTests/       Swift Testing tests
 Info.plist               App bundle settings (menu bar only, no Dock icon)
 Makefile                 Build, run and test commands
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
